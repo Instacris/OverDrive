@@ -21,8 +21,11 @@ let modoLocal = false; // Se activa solo si la API no responde
 
 async function llamarAPI(ruta, opciones = {}) {
   const respuesta = await fetch(ruta, {
-    headers: { 'Content-Type': 'application/json', ...(opciones.headers || {}) },
-    ...opciones
+    ...opciones,
+    // Las cabeceras van DESPUÉS de ...opciones para que la mezcla
+    // (Content-Type + clave de admin) no se pierda. Sin Content-Type,
+    // Vercel no interpreta el cuerpo JSON y el guardado falla.
+    headers: { 'Content-Type': 'application/json', ...(opciones.headers || {}) }
   });
   if (!respuesta.ok) {
     const cuerpo = await respuesta.json().catch(() => ({}));

@@ -4,11 +4,11 @@
    GET    → lista los mensajes (solo admin)
    DELETE → borra un mensaje por id (solo admin)
    ========================================================= */
-const { leerBD, guardarBD, CLAVE_ADMIN } = require('../lib/db.js');
+const { leerBD, guardarBD, CLAVE_ADMIN, cuerpoJSON } = require('../lib/db.js');
 
 module.exports = async (req, res) => {
   if (req.method === 'POST') {
-    const m = req.body || {};
+    const m = cuerpoJSON(req) || {};
     if (!m.nombre || !m.correo || !m.telefono || !m.mensaje) {
       return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }

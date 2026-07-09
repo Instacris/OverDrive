@@ -3,7 +3,7 @@
    GET  → catálogo (público)
    PUT  → reemplaza el catálogo (solo admin)
    ========================================================= */
-const { leerBD, guardarBD, CLAVE_ADMIN } = require('../lib/db.js');
+const { leerBD, guardarBD, CLAVE_ADMIN, cuerpoJSON } = require('../lib/db.js');
 
 module.exports = async (req, res) => {
   if (req.method === 'GET') {
@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     if (req.headers['x-clave-admin'] !== CLAVE_ADMIN) {
       return res.status(401).json({ error: 'No autorizado' });
     }
-    const lista = req.body;
+    const lista = cuerpoJSON(req);
     if (!Array.isArray(lista)) {
       return res.status(400).json({ error: 'Se esperaba una lista' });
     }

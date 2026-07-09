@@ -2,13 +2,13 @@
    OVERDRIVE — API /api/login (Vercel)
    POST → valida la contraseña del panel de administración
    ========================================================= */
-const { CLAVE_ADMIN } = require('../lib/db.js');
+const { CLAVE_ADMIN, cuerpoJSON } = require('../lib/db.js');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
-  const { clave } = req.body || {};
+  const { clave } = cuerpoJSON(req) || {};
   if (clave === CLAVE_ADMIN) {
     return res.status(200).json({ ok: true });
   }
