@@ -1,0 +1,5 @@
+# Estos archivos son solo para desarrollo local, no se suben a Vercel:
+servidor.js
+datos.json
+node_modules
+.claude

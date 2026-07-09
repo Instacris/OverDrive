@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overdrive — Cosplay del Asesino de Scream</title>
+  <meta name="description" content="Tienda de cosplay especializada en máscaras y uniformes del asesino de Scream. Máscaras de látex, túnicas y accesorios.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="icon" type="image/png" href="imagenes/Logo.png">
+</head>
+<body>
+
+  <!-- Barra de navegación (vista de usuario: sin enlace al panel admin) -->
+  <nav class="navegacion">
+    <a href="/" class="logo">
+      <img src="imagenes/Logo.png" alt="Logo Scream — Overdrive" class="logo-img">
+      <span class="nombre fuente-terror">OVER<span>DRIVE</span></span>
+    </a>
+    <div class="enlaces">
+      <a href="#catalogo">Catálogo</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+  </nav>
+
+  <!-- Héroe -->
+  <header class="heroe">
+    <div>
+      <h1 class="fuente-terror">¿CUÁL ES TU PELÍCULA<br>DE TERROR <span>FAVORITA?</span></h1>
+      <p>
+        Emprendimiento chileno especializado en cosplay del asesino de Scream:
+        máscaras de látex de distintas ediciones, túnicas con capucha y accesorios
+        para completar tu disfraz. Calidad de utilería, precios de barrio.
+      </p>
+      <div class="acciones">
+        <a href="#catalogo" class="boton boton-rojo">Ver catálogo</a>
+        <a href="#contacto" class="boton boton-fantasma">Contáctanos</a>
+      </div>
+    </div>
+    <figure class="foto-heroe">
+      <div class="marco-heroe">
+        <img id="foto-rotativa" src="imagenes/creadorprincipal.png" alt="El creador de Overdrive y su equipo con las máscaras Ghostface">
+        <!-- Cortina de sangre que baña la foto en cada cambio -->
+        <div id="cortina-sangre" class="cortina-sangre" aria-hidden="true">
+          <svg class="goteo" viewBox="0 0 400 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 0 L400 0 L400 8 C388 8 384 34 374 34 C364 34 362 8 350 8 C338 8 336 52 324 52 C312 52 310 8 296 8 C284 8 282 26 272 26 C262 26 258 8 246 8 C234 8 232 44 220 44 C208 44 206 8 192 8 C180 8 178 30 168 30 C158 30 154 8 142 8 C130 8 128 56 116 56 C104 56 102 8 88 8 C76 8 74 22 64 22 C54 22 50 8 38 8 C26 8 24 38 12 38 C4 38 4 8 0 8 Z" fill="#8f0f1c"/>
+          </svg>
+        </div>
+      </div>
+    </figure>
+  </header>
+
+  <!-- Catálogo con stock -->
+  <main>
+    <section id="catalogo" class="seccion">
+      <h2 class="fuente-terror">CATÁLOGO <span>&amp; STOCK</span></h2>
+      <p class="subtitulo">Precios en pesos chilenos. El stock se actualiza en tiempo real desde nuestro panel de administración.</p>
+
+      <div class="filtros" id="filtros">
+        <button class="activo" data-categoria="Todos">Todos</button>
+        <button data-categoria="Máscara">Máscaras</button>
+        <button data-categoria="Uniforme">Uniformes</button>
+        <button data-categoria="Accesorio">Accesorios</button>
+      </div>
+
+      <div class="catalogo" id="rejilla-catalogo"><!-- Se genera con JavaScript --></div>
+    </section>
+
+    <!-- Materiales -->
+    <section id="materiales" class="seccion" style="padding-top: 0;">
+      <h2 class="fuente-terror">NUESTROS <span>MATERIALES</span></h2>
+      <p class="subtitulo">Cada pieza está hecha para durar más de una noche de sustos.</p>
+      <div class="rejilla-info">
+        <div class="caja-info">
+          <div class="emoji">🎭</div>
+          <h3>Látex natural</h3>
+          <p>Nuestras máscaras se fabrican en látex flexible con forro interior de algodón, cómodo para uso prolongado y fácil de limpiar.</p>
+        </div>
+        <div class="caja-info">
+          <div class="emoji">🧵</div>
+          <h3>Poliéster reforzado</h3>
+          <p>Las túnicas usan poliéster negro mate con costuras dobles y capucha amplia que no se cae al correr… o al perseguir.</p>
+        </div>
+        <div class="caja-info">
+          <div class="emoji">🔪</div>
+          <h3>Utilería segura</h3>
+          <p>Los cuchillos de utilería son de goma EVA flexible: se ven reales en fotos, pero son 100% inofensivos.</p>
+        </div>
+        <div class="caja-info">
+          <div class="emoji">📦</div>
+          <h3>Hecho a pedido</h3>
+          <p>¿Talla especial o detalle personalizado? Escríbenos por el formulario y lo cotizamos sin compromiso.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Formulario de contacto -->
+    <section id="contacto" class="seccion">
+      <h2 class="fuente-terror" style="text-align:center;">CONTÁCTANOS <span>SI TE ATREVES</span></h2>
+      <p class="subtitulo" style="text-align:center;">Para comprar o cotizar, completa el formulario con tus datos y te responderemos a la brevedad.</p>
+
+      <div class="contenedor-formulario">
+        <form id="formulario-contacto" novalidate>
+          <div class="fila-doble">
+            <div class="campo">
+              <label for="nombre">Nombre completo <span class="obligatorio">*</span></label>
+              <input type="text" id="nombre" name="nombre" placeholder="Ej: Sidney Prescott" required>
+            </div>
+            <div class="campo">
+              <label for="correo">Correo electrónico <span class="obligatorio">*</span></label>
+              <input type="email" id="correo" name="correo" placeholder="tucorreo@ejemplo.cl" required>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="telefono">Teléfono <span class="obligatorio">*</span></label>
+            <input type="tel" id="telefono" name="telefono" placeholder="+56 9 1234 5678" required>
+          </div>
+          <div class="campo">
+            <label>Productos de interés</label>
+            <button type="button" id="boton-elegir-productos" class="boton boton-fantasma" style="width:100%;">
+              🔪 Seleccionar productos (0)
+            </button>
+            <div id="chips-productos" class="chips-productos"><!-- Chips de lo seleccionado --></div>
+          </div>
+          <div class="campo">
+            <label for="mensaje">Mensaje <span class="obligatorio">*</span></label>
+            <textarea id="mensaje" name="mensaje" placeholder="Cuéntanos qué necesitas: tallas, cantidades, fecha del evento…" required></textarea>
+          </div>
+          <button type="submit" class="boton boton-rojo" style="width:100%;">Enviar mensaje</button>
+          <div id="aviso-formulario" class="aviso-formulario" role="alert"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie-pagina">
+    <p>© 2026 Overdrive — Cosplay del asesino de Scream · Santiago de Chile</p>
+    <p>Escríbenos por el formulario y te respondemos a la brevedad.</p>
+  </footer>
+
+  <!-- Ventana emergente para elegir uno o varios productos -->
+  <div id="modal-productos" class="modal-fondo" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
+      <div class="modal-cabecera">
+        <h3 id="titulo-modal" class="fuente-terror">ELIGE TUS <span style="color:var(--rojo)">PRODUCTOS</span></h3>
+        <button type="button" id="cerrar-modal" class="boton-cerrar" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-lista" id="modal-lista"><!-- Se genera con JavaScript --></div>
+      <div class="modal-pie">
+        <button type="button" id="limpiar-seleccion" class="boton boton-fantasma boton-chico">Quitar todo</button>
+        <button type="button" id="confirmar-seleccion" class="boton boton-rojo boton-chico">Confirmar selección</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notificacion" class="notificacion"></div>
+
+  <script src="js/catalogo-inicial.js"></script>
+  <script src="js/datos.js"></script>
+  <script src="js/tienda.js"></script>
+</body>
+</html>

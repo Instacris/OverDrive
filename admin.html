@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administración — Overdrive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="icon" type="image/png" href="imagenes/Logo.png">
+</head>
+<body>
+
+  <!-- Barra de navegación (2 enlaces: Tienda / Administración) -->
+  <nav class="navegacion">
+    <a href="/" class="logo">
+      <img src="imagenes/Logo.png" alt="Logo Scream — Overdrive" class="logo-img">
+      <span class="nombre fuente-terror">OVER<span>DRIVE</span></span>
+    </a>
+    <div class="enlaces">
+      <a href="/">Tienda</a>
+      <a href="/admin" class="activo">Administración</a>
+    </div>
+  </nav>
+
+  <!-- Pantalla de inicio de sesión -->
+  <div id="pantalla-login" class="pantalla-login">
+    <div class="caja-login">
+      <img src="imagenes/Logo.png" alt="Logo Scream — Overdrive" class="logo-login">
+      <h1 class="fuente-terror">PANEL DE <span style="color:var(--rojo)">ADMINISTRACIÓN</span></h1>
+      <p>Acceso exclusivo para el equipo de Overdrive.</p>
+      <form id="formulario-login">
+        <div class="campo">
+          <label for="clave">Contraseña</label>
+          <input type="password" id="clave" placeholder="••••••••••" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="boton boton-rojo" style="width:100%;">Entrar</button>
+        <div id="aviso-login" class="aviso-formulario" role="alert"></div>
+      </form>
+      <p class="pista-demo">🔑 Proyecto de demostración — contraseña: <code>fantasma123</code></p>
+    </div>
+  </div>
+
+  <!-- Panel de administración (oculto hasta iniciar sesión) -->
+  <main id="panel-admin" class="seccion" style="display:none;">
+
+    <div class="encabezado-admin">
+      <h1 class="fuente-terror">PANEL DE <span>CONTROL</span></h1>
+      <button id="boton-salir" class="boton boton-fantasma boton-chico">Cerrar sesión</button>
+    </div>
+
+    <!-- Resumen -->
+    <div class="estadisticas" id="estadisticas"><!-- Se genera con JavaScript --></div>
+
+    <!-- Inventario editable -->
+    <h2 class="fuente-terror" style="margin-bottom:14px;">INVENTARIO <span style="color:var(--rojo)">&amp; PRECIOS</span></h2>
+    <p class="subtitulo">Edita precio, oferta, stock o materiales y presiona «Guardar» en cada fila. Los cambios se ven al instante en la tienda.</p>
+    <div class="envoltura-tabla">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Materiales</th>
+            <th>Precio (CLP)</th>
+            <th>Oferta (%)</th>
+            <th>Precio final</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-tabla"><!-- Se genera con JavaScript --></tbody>
+      </table>
+    </div>
+
+    <!-- Agregar producto -->
+    <div class="caja-agregar">
+      <h2 class="fuente-terror">AGREGAR <span style="color:var(--rojo)">PRODUCTO</span></h2>
+      <form id="formulario-agregar">
+        <div class="rejilla-agregar">
+          <div class="campo">
+            <label for="nuevo-nombre">Nombre <span class="obligatorio">*</span></label>
+            <input type="text" id="nuevo-nombre" placeholder="Ej: Máscara Fantasma Dorada" required>
+          </div>
+          <div class="campo">
+            <label for="nueva-categoria">Categoría</label>
+            <select id="nueva-categoria">
+              <option value="Máscara">Máscara</option>
+              <option value="Uniforme">Uniforme</option>
+              <option value="Accesorio">Accesorio</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="nueva-imagen">Imagen</label>
+            <select id="nueva-imagen"><!-- Se completa con JavaScript --></select>
+          </div>
+          <div class="campo">
+            <label for="nuevo-precio">Precio CLP <span class="obligatorio">*</span></label>
+            <input type="number" id="nuevo-precio" min="0" step="10" placeholder="19990" required>
+          </div>
+          <div class="campo">
+            <label for="nueva-oferta">Oferta (%)</label>
+            <input type="number" id="nueva-oferta" min="0" max="90" value="0">
+          </div>
+          <div class="campo">
+            <label for="nuevo-stock">Stock inicial</label>
+            <input type="number" id="nuevo-stock" min="0" value="0">
+          </div>
+        </div>
+        <div class="campo">
+          <label for="nuevos-materiales">Materiales <span class="obligatorio">*</span></label>
+          <input type="text" id="nuevos-materiales" placeholder="Ej: Látex natural, pintura acrílica" required>
+        </div>
+        <button type="submit" class="boton boton-rojo">+ Agregar al catálogo</button>
+        <button type="button" id="boton-restaurar" class="boton boton-peligro" style="margin-left:10px;">Restaurar catálogo original</button>
+      </form>
+    </div>
+
+    <!-- Mensajes del formulario de contacto -->
+    <h2 class="fuente-terror" style="margin-bottom:14px;">MENSAJES <span style="color:var(--rojo)">RECIBIDOS</span></h2>
+    <p class="subtitulo">Datos de contacto que los clientes dejaron en el formulario de la tienda.</p>
+    <div class="lista-mensajes" id="lista-mensajes"><!-- Se genera con JavaScript --></div>
+
+  </main>
+
+  <footer class="pie-pagina">
+    <p>© 2026 Overdrive — Panel interno · Volver a la <a href="/">tienda</a></p>
+  </footer>
+
+  <div id="notificacion" class="notificacion"></div>
+
+  <script src="js/catalogo-inicial.js"></script>
+  <script src="js/datos.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

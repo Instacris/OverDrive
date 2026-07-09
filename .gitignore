@@ -1,0 +1,12 @@
+# Dependencias (Vercel las instala solo)
+node_modules
+
+# Base de datos local de pruebas (Vercel usa Upstash, no este archivo)
+datos.json
+
+# Archivos del sistema / editor
+.DS_Store
+.vercel
+
+# Configuración local de Claude Code (no es parte del sitio)
+.claude
