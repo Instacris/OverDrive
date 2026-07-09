@@ -29,13 +29,14 @@ ejecuta `vercel`. Sigue las preguntas.)*
 ## Paso 2 — Crea la base de datos (gratis)
 
 1. Entra a tu proyecto en Vercel → pestaña **Storage**.
-2. **Create Database** → elige **Redis** (proveedor Upstash) → **Continue**.
-3. Ponle un nombre (ej. `overdrive-db`), plan **Free**, y **Create**.
-4. Cuando pregunte a qué proyecto conectarla, elige **overdrive** y
-   confirma **Connect**.
+2. **Create Database** → elige la integración **Redis** (Redis Cloud) → **Continue**.
+3. En **High Availability** elige **"None · free plan friendly"** (si no, no
+   aparece el plan gratis). Selecciona el plan **Free — 30 MB** → **Create**.
+4. Cuando pregunte a qué proyecto conectarla, elige **overdrive**, deja
+   marcados **Production** y **Preview**, y confirma **Connect**.
 
-Esto agrega automáticamente las claves secretas de la base de datos a tu
-proyecto (no tienes que copiar nada a mano).
+Esto agrega automáticamente la variable secreta `REDIS_URL` a tu proyecto
+(no tienes que copiar nada a mano).
 
 ---
 

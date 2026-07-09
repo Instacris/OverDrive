@@ -4,6 +4,6 @@
   "private": true,
   "description": "Overdrive — tienda de cosplay del asesino de Scream",
   "dependencies": {
-    "@upstash/redis": "^1.34.3"
+    "ioredis": "^5.4.1"
   }
 }
