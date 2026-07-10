@@ -9,16 +9,36 @@
    archivo), todo sigue funcionando con localStorage en este navegador.
    ========================================================= */
 
-const CLAVE_PRODUCTOS = 'gritonegro_productos_v2';
-const CLAVE_MENSAJES  = 'gritonegro_mensajes_v1';
+/* ---------- Modo DEMO (para el portafolio) ----------
+   Se activa con ?demo en la URL y queda "pegado" en la pestaña con
+   sessionStorage (así al navegar entre la tienda y el panel sigue en
+   demo). En demo TODO ocurre en el navegador con localStorage y NUNCA
+   se llama a la API: por eso no afecta en nada a la tienda real. */
+function esDemo() {
+  try {
+    if (new URLSearchParams(location.search).has('demo')) {
+      sessionStorage.setItem('overdrive_demo', '1');
+    }
+    return sessionStorage.getItem('overdrive_demo') === '1';
+  } catch {
+    return false;
+  }
+}
+
+const DEMO = esDemo();
+
+/* En demo se usan claves de localStorage propias (aisladas y reseteables),
+   distintas de las del modo respaldo normal. */
+const CLAVE_PRODUCTOS = DEMO ? 'overdrive_demo_productos' : 'gritonegro_productos_v2';
+const CLAVE_MENSAJES  = DEMO ? 'overdrive_demo_mensajes'  : 'gritonegro_mensajes_v1';
 const CLAVE_SESION    = 'gritonegro_sesion_admin';
 
 /* Contraseña usada SOLO en modo respaldo sin servidor (doble clic al
-   archivo o pruebas locales). Con servidor, la contraseña real vive
-   en el servidor y nunca se valida aquí. */
+   archivo o pruebas locales) y en el demo del portafolio. Con servidor,
+   la contraseña real vive en el servidor y nunca se valida aquí. */
 const CLAVE_ADMIN_LOCAL = 'fantasma123';
 
-let modoLocal = false; // Se activa solo si la API no responde
+let modoLocal = DEMO; // En demo arranca en modo local: nunca llama a la API
 
 /* El modo respaldo con contraseña local solo se permite en contextos
    locales (archivo abierto con doble clic, localhost o red casera).
@@ -74,12 +94,39 @@ async function iniciarSesionAdmin(clave) {
       modoLocal = true; // El servidor no está disponible: pasamos a modo local
     }
   }
-  // Sin servidor, solo se acepta la clave local Y solo en contextos locales
-  if (esContextoLocal() && clave === CLAVE_ADMIN_LOCAL) {
+  // Sin servidor, solo se acepta la clave local en contextos locales o en el demo
+  if ((esContextoLocal() || DEMO) && clave === CLAVE_ADMIN_LOCAL) {
     sessionStorage.setItem(CLAVE_SESION, clave);
     return { ok: true };
   }
   return { ok: false, error: 'Contraseña incorrecta.' };
+}
+
+/* Borra los datos del demo para dejarlo como recién estrenado. */
+function reiniciarDemo() {
+  localStorage.removeItem(CLAVE_PRODUCTOS);
+  localStorage.removeItem(CLAVE_MENSAJES);
+  sessionStorage.removeItem(CLAVE_SESION);
+}
+
+/* Banner superior que aparece SOLO en modo demo: avisa que es una
+   demostración y permite saltar entre la vista cliente y la admin. */
+function mostrarBannerDemo() {
+  if (!DEMO || document.querySelector('.banner-demo')) return;
+  const banner = document.createElement('div');
+  banner.className = 'banner-demo';
+  banner.innerHTML = `
+    <span>🔎 <strong>MODO DEMO</strong> · los cambios son de prueba, no afectan la tienda real</span>
+    <span class="acciones-demo">
+      <a href="index.html">🛍️ Cliente</a>
+      <a href="admin.html">🔐 Admin</a>
+      <button type="button" data-demo-reiniciar>↺ Reiniciar</button>
+    </span>`;
+  document.body.prepend(banner);
+  banner.querySelector('[data-demo-reiniciar]').addEventListener('click', () => {
+    reiniciarDemo();
+    location.reload();
+  });
 }
 
 function haySesion() {

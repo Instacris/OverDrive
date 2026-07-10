@@ -257,13 +257,16 @@ function iniciarFormulario() {
 
 /* ---------- Inicio ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
+  mostrarBannerDemo();
   iniciarFiltros();
   iniciarModal();
   iniciarFormulario();
   iniciarRotacionHeroe();
   await cargarCatalogo();
 
-  // Consulta al servidor cada 8 segundos: si el administrador cambió
-  // precios, ofertas o stock, la tienda se actualiza sola
-  setInterval(() => cargarCatalogo().catch(() => {}), 8000);
+  // En el sitio real, consulta al servidor cada 8 segundos para reflejar
+  // los cambios del administrador. En demo no hace falta (todo es local).
+  if (!DEMO) {
+    setInterval(() => cargarCatalogo().catch(() => {}), 8000);
+  }
 });

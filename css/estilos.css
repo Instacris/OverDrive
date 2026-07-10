@@ -1042,3 +1042,115 @@ td .celda-producto { display: flex; align-items: center; gap: 12px; }
     transition: none !important;
   }
 }
+
+/* =========================================================
+   MODO DEMO (portafolio): banner superior + landing
+   ========================================================= */
+.banner-demo {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, var(--rojo-oscuro), var(--rojo));
+  color: #fff;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.banner-demo strong { font-weight: 800; }
+
+.banner-demo .acciones-demo { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.banner-demo a, .banner-demo button {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.banner-demo a:hover, .banner-demo button:hover { background: rgba(0, 0, 0, 0.45); }
+
+/* Landing del demo */
+.demo-landing {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.demo-caja {
+  width: 100%;
+  max-width: 620px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 40px 34px;
+  box-shadow: var(--sombra);
+}
+
+.demo-caja .logo-demo {
+  height: 110px;
+  width: 110px;
+  object-fit: cover;
+  filter: invert(1);
+  mix-blend-mode: screen;
+  margin-bottom: 8px;
+}
+
+.demo-caja h1 { font-size: 2.4rem; color: var(--hueso); }
+.demo-caja h1 span { color: var(--rojo); }
+
+.demo-caja .lema { color: var(--texto-suave); margin: 10px 0 26px; font-size: 1rem; }
+
+.demo-opciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.demo-opcion {
+  display: block;
+  padding: 26px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--borde);
+  background: var(--fondo);
+  text-decoration: none;
+  color: var(--texto);
+  transition: transform 0.15s, border-color 0.2s;
+}
+
+.demo-opcion:hover { transform: translateY(-4px); border-color: var(--rojo); }
+
+.demo-opcion .emoji { font-size: 2.2rem; }
+.demo-opcion h2 { font-size: 1.15rem; margin: 8px 0 4px; color: var(--hueso); }
+.demo-opcion p { font-size: 0.82rem; color: var(--texto-suave); }
+
+.demo-nota {
+  margin-top: 22px;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  background: var(--fondo);
+  border: 1px dashed var(--borde);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.demo-nota code { color: var(--ambar); }
+
+@media (max-width: 520px) {
+  .demo-opciones { grid-template-columns: 1fr; }
+}

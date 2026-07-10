@@ -307,13 +307,26 @@ function pintarMensajes() {
 
 /* ---------- Inicio ---------- */
 document.addEventListener('DOMContentLoaded', async () => {
+  mostrarBannerDemo();
+  // En demo, muestra la contraseña bajo el login para poder entrar a probar
+  if (DEMO) {
+    const form = document.getElementById('formulario-login');
+    if (form && !document.querySelector('.pista-demo')) {
+      const pista = document.createElement('p');
+      pista.className = 'pista-demo';
+      pista.innerHTML = '🔑 Demo — contraseña: <code>fantasma123</code>';
+      form.appendChild(pista);
+    }
+  }
   iniciarLogin();
   llenarSelectorImagenes();
   iniciarAgregar();
   await mostrarSegunSesion();
 
-  // Refresca el panel cada 10 segundos para ver mensajes nuevos al instante
-  setInterval(() => {
-    if (haySesion()) cargarPanel().catch(() => {});
-  }, 10000);
+  // Refresca el panel cada 10 segundos (solo en el sitio real con servidor)
+  if (!DEMO) {
+    setInterval(() => {
+      if (haySesion()) cargarPanel().catch(() => {});
+    }, 10000);
+  }
 });
