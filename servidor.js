@@ -1,24 +1,65 @@
 /* =========================================================
-   GRITO NEGRO — Servidor con base de datos
+   OVERDRIVE — Servidor local con base de datos
    Uso: node servidor.js  →  http://localhost:4173
 
-   Sirve la página y además expone una API REST cuya
-   información vive en el archivo "datos.json" (la base de
-   datos). Así los cambios del panel de administración los
-   ven TODOS los visitantes, desde cualquier dispositivo
-   conectado al servidor.
+   Sirve la página y expone la misma API que Vercel, con las
+   mismas capas de seguridad: cabeceras protectoras, validación
+   de datos y límite de intentos de login por IP. La información
+   vive en el archivo "datos.json" (solo para pruebas locales).
    ========================================================= */
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { PRODUCTOS_INICIALES } = require('./js/catalogo-inicial.js');
+const { sanearProductos, sanearMensaje } = require('./lib/validar.js');
 
 const PUERTO = 4173;
 const RAIZ = __dirname;
 const RUTA_BD = path.join(RAIZ, 'datos.json');
+const MAX_MENSAJES_GUARDADOS = 200;
 
 /* Contraseña del panel de administración (vive solo en el servidor) */
 const CLAVE_ADMIN = 'fantasma123';
+
+/* ---------- Cabeceras de seguridad (las mismas que en Vercel) ---------- */
+const CABECERAS_SEGURIDAD = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy':
+    "default-src 'self'; script-src 'self'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src https://fonts.gstatic.com; img-src 'self' data:; " +
+    "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+};
+
+/* ---------- Seguridad: comparación en tiempo constante ---------- */
+function claveValida(entrada) {
+  const a = Buffer.from(String(entrada ?? ''));
+  const b = Buffer.from(CLAVE_ADMIN);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/* ---------- Seguridad: límite de intentos por IP (en memoria) ---------- */
+const eventos = new Map();
+
+function demasiadosEventos(tipo, ip, maximo) {
+  const registro = eventos.get(`${tipo}:${ip}`);
+  if (!registro || Date.now() > registro.expira) return false;
+  return registro.n >= maximo;
+}
+
+function registrarEvento(tipo, ip, ventanaSegundos) {
+  const clave = `${tipo}:${ip}`;
+  const registro = eventos.get(clave);
+  if (!registro || Date.now() > registro.expira) {
+    eventos.set(clave, { n: 1, expira: Date.now() + ventanaSegundos * 1000 });
+  } else {
+    registro.n++;
+  }
+}
 
 /* ---------- Base de datos (archivo datos.json) ---------- */
 function leerBD() {
@@ -37,7 +78,10 @@ function guardarBD(datos) {
 
 /* ---------- Utilidades HTTP ---------- */
 function responderJSON(respuesta, codigo, datos) {
-  respuesta.writeHead(codigo, { 'Content-Type': 'application/json; charset=utf-8' });
+  respuesta.writeHead(codigo, {
+    'Content-Type': 'application/json; charset=utf-8',
+    ...CABECERAS_SEGURIDAD
+  });
   respuesta.end(JSON.stringify(datos));
 }
 
@@ -55,58 +99,81 @@ function leerCuerpo(peticion) {
   });
 }
 
-function esAdmin(peticion) {
-  return peticion.headers['x-clave-admin'] === CLAVE_ADMIN;
+function ipDe(peticion) {
+  return peticion.socket.remoteAddress || 'desconocida';
 }
 
 /* ---------- API ---------- */
 async function manejarAPI(peticion, respuesta, ruta, consulta) {
-  // Iniciar sesión del administrador
+  const ip = ipDe(peticion);
+
+  // Iniciar sesión del administrador (con límite de intentos)
   if (ruta === '/api/login' && peticion.method === 'POST') {
+    if (demasiadosEventos('login', ip, 8)) {
+      return responderJSON(respuesta, 429, { error: 'Demasiados intentos. Espera 10 minutos y vuelve a probar.' });
+    }
     const { clave } = await leerCuerpo(peticion);
-    if (clave === CLAVE_ADMIN) return responderJSON(respuesta, 200, { ok: true });
+    if (claveValida(clave)) return responderJSON(respuesta, 200, { ok: true });
+    registrarEvento('login', ip, 600);
     return responderJSON(respuesta, 401, { error: 'Contraseña incorrecta' });
   }
 
-  // Catálogo: leer (público) y reemplazar (solo admin)
+  // Catálogo: leer (público) y reemplazar (solo admin, con validación)
   if (ruta === '/api/productos' && peticion.method === 'GET') {
     return responderJSON(respuesta, 200, leerBD().productos);
   }
   if (ruta === '/api/productos' && peticion.method === 'PUT') {
-    if (!esAdmin(peticion)) return responderJSON(respuesta, 401, { error: 'No autorizado' });
-    const lista = await leerCuerpo(peticion);
-    if (!Array.isArray(lista)) return responderJSON(respuesta, 400, { error: 'Se esperaba una lista' });
+    if (demasiadosEventos('login', ip, 8)) {
+      return responderJSON(respuesta, 429, { error: 'Demasiados intentos. Espera 10 minutos.' });
+    }
+    if (!claveValida(peticion.headers['x-clave-admin'])) {
+      registrarEvento('login', ip, 600);
+      return responderJSON(respuesta, 401, { error: 'No autorizado' });
+    }
+    const resultado = sanearProductos(await leerCuerpo(peticion));
+    if (resultado.error) return responderJSON(respuesta, 400, { error: resultado.error });
     const bd = leerBD();
-    bd.productos = lista;
+    bd.productos = resultado.productos;
     guardarBD(bd);
     return responderJSON(respuesta, 200, { ok: true });
   }
 
-  // Mensajes: enviar (público), leer y borrar (solo admin)
+  // Mensajes: enviar (público, anti-spam), leer y borrar (solo admin)
   if (ruta === '/api/mensajes' && peticion.method === 'POST') {
-    const m = await leerCuerpo(peticion);
-    if (!m.nombre || !m.correo || !m.telefono || !m.mensaje) {
-      return responderJSON(respuesta, 400, { error: 'Faltan campos obligatorios' });
+    if (demasiadosEventos('mensajes', ip, 5)) {
+      return responderJSON(respuesta, 429, { error: 'Has enviado demasiados mensajes seguidos. Espera unos minutos.' });
     }
+    const resultado = sanearMensaje(await leerCuerpo(peticion));
+    if (resultado.error) return responderJSON(respuesta, 400, { error: resultado.error });
     const bd = leerBD();
     bd.mensajes.unshift({
       id: Date.now(),
-      nombre: String(m.nombre).slice(0, 120),
-      correo: String(m.correo).slice(0, 120),
-      telefono: String(m.telefono).slice(0, 40),
-      productos: Array.isArray(m.productos) ? m.productos.map(p => String(p).slice(0, 120)) : ['Consulta general'],
-      mensaje: String(m.mensaje).slice(0, 2000),
+      ...resultado.mensaje,
       fecha: new Date().toLocaleString('es-CL')
     });
+    bd.mensajes = bd.mensajes.slice(0, MAX_MENSAJES_GUARDADOS);
     guardarBD(bd);
+    registrarEvento('mensajes', ip, 600);
     return responderJSON(respuesta, 201, { ok: true });
   }
   if (ruta === '/api/mensajes' && peticion.method === 'GET') {
-    if (!esAdmin(peticion)) return responderJSON(respuesta, 401, { error: 'No autorizado' });
+    if (demasiadosEventos('login', ip, 8)) {
+      return responderJSON(respuesta, 429, { error: 'Demasiados intentos. Espera 10 minutos.' });
+    }
+    if (!claveValida(peticion.headers['x-clave-admin'])) {
+      registrarEvento('login', ip, 600);
+      return responderJSON(respuesta, 401, { error: 'No autorizado' });
+    }
     return responderJSON(respuesta, 200, leerBD().mensajes);
   }
   if (ruta === '/api/mensajes' && peticion.method === 'DELETE') {
-    if (!esAdmin(peticion)) return responderJSON(respuesta, 401, { error: 'No autorizado' });
+    if (demasiadosEventos('login', ip, 8)) {
+      return responderJSON(respuesta, 429, { error: 'Demasiados intentos. Espera 10 minutos.' });
+    }
+    if (!claveValida(peticion.headers['x-clave-admin'])) {
+      registrarEvento('login', ip, 600);
+      return responderJSON(respuesta, 401, { error: 'No autorizado' });
+    }
     const id = Number(consulta.get('id'));
     const bd = leerBD();
     bd.mensajes = bd.mensajes.filter(m => m.id !== id);
@@ -140,12 +207,22 @@ function servirArchivo(respuesta, ruta) {
   }
 
   if (!archivo.startsWith(RAIZ) || !fs.existsSync(archivo) || fs.statSync(archivo).isDirectory()) {
-    respuesta.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    respuesta.end('404 — No encontrado');
+    // Página 404 personalizada (la misma que usa Vercel)
+    const pagina404 = path.join(RAIZ, '404.html');
+    if (fs.existsSync(pagina404)) {
+      respuesta.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', ...CABECERAS_SEGURIDAD });
+      fs.createReadStream(pagina404).pipe(respuesta);
+    } else {
+      respuesta.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', ...CABECERAS_SEGURIDAD });
+      respuesta.end('404 — No encontrado');
+    }
     return;
   }
 
-  respuesta.writeHead(200, { 'Content-Type': TIPOS[path.extname(archivo).toLowerCase()] || 'application/octet-stream' });
+  respuesta.writeHead(200, {
+    'Content-Type': TIPOS[path.extname(archivo).toLowerCase()] || 'application/octet-stream',
+    ...CABECERAS_SEGURIDAD
+  });
   fs.createReadStream(archivo).pipe(respuesta);
 }
 

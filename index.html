@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Overdrive — Cosplay del Asesino de Scream</title>
   <meta name="description" content="Tienda de cosplay especializada en máscaras y uniformes del asesino de Scream. Máscaras de látex, túnicas y accesorios.">
+  <meta name="theme-color" content="#0a0a0d">
+  <link rel="canonical" href="https://overdrive-woad.vercel.app/">
+  <!-- Vista previa al compartir el link por WhatsApp o redes sociales -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Overdrive — Cosplay del Asesino de Scream">
+  <meta property="og:description" content="Máscaras, túnicas y accesorios del asesino de Scream. Mira ofertas y stock en tiempo real. Hecho en Chile.">
+  <meta property="og:url" content="https://overdrive-woad.vercel.app/">
+  <meta property="og:image" content="https://overdrive-woad.vercel.app/imagenes/creadorprincipal.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -65,7 +74,9 @@
         <button data-categoria="Accesorio">Accesorios</button>
       </div>
 
-      <div class="catalogo" id="rejilla-catalogo"><!-- Se genera con JavaScript --></div>
+      <div class="catalogo" id="rejilla-catalogo">
+        <p class="sin-datos" style="grid-column:1/-1;">Cargando catálogo…</p>
+      </div>
     </section>
 
     <!-- Materiales -->
@@ -106,16 +117,16 @@
           <div class="fila-doble">
             <div class="campo">
               <label for="nombre">Nombre completo <span class="obligatorio">*</span></label>
-              <input type="text" id="nombre" name="nombre" placeholder="Ej: Sidney Prescott" required>
+              <input type="text" id="nombre" name="nombre" placeholder="Ej: Sidney Prescott" maxlength="120" required>
             </div>
             <div class="campo">
               <label for="correo">Correo electrónico <span class="obligatorio">*</span></label>
-              <input type="email" id="correo" name="correo" placeholder="tucorreo@ejemplo.cl" required>
+              <input type="email" id="correo" name="correo" placeholder="tucorreo@ejemplo.cl" maxlength="120" required>
             </div>
           </div>
           <div class="campo">
             <label for="telefono">Teléfono <span class="obligatorio">*</span></label>
-            <input type="tel" id="telefono" name="telefono" placeholder="+56 9 1234 5678" required>
+            <input type="tel" id="telefono" name="telefono" placeholder="+56 9 1234 5678" maxlength="40" required>
           </div>
           <div class="campo">
             <label>Productos de interés</label>
@@ -126,7 +137,7 @@
           </div>
           <div class="campo">
             <label for="mensaje">Mensaje <span class="obligatorio">*</span></label>
-            <textarea id="mensaje" name="mensaje" placeholder="Cuéntanos qué necesitas: tallas, cantidades, fecha del evento…" required></textarea>
+            <textarea id="mensaje" name="mensaje" placeholder="Cuéntanos qué necesitas: tallas, cantidades, fecha del evento…" maxlength="2000" required></textarea>
           </div>
           <button type="submit" class="boton boton-rojo" style="width:100%;">Enviar mensaje</button>
           <div id="aviso-formulario" class="aviso-formulario" role="alert"></div>
@@ -168,7 +179,7 @@
     </div>
   </div>
 
-  <div id="notificacion" class="notificacion"></div>
+  <div id="notificacion" class="notificacion" role="status" aria-live="polite"></div>
 
   <script src="js/catalogo-inicial.js"></script>
   <script src="js/datos.js"></script>

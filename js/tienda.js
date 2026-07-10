@@ -241,9 +241,9 @@ function iniciarFormulario() {
         productos: productos.length ? productos : ['Consulta general'],
         mensaje
       });
-    } catch {
+    } catch (error) {
       aviso.classList.add('error');
-      aviso.textContent = '⚠ No pudimos enviar tu mensaje. Inténtalo de nuevo.';
+      aviso.textContent = `⚠ ${error.message || 'No pudimos enviar tu mensaje. Inténtalo de nuevo.'}`;
       return;
     }
 

@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- El panel no debe aparecer en buscadores (Google, Bing, etc.) -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0a0a0d">
   <title>Administración — Overdrive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +41,6 @@
         <button type="submit" class="boton boton-rojo" style="width:100%;">Entrar</button>
         <div id="aviso-login" class="aviso-formulario" role="alert"></div>
       </form>
-      <p class="pista-demo">🔑 Proyecto de demostración — contraseña: <code>fantasma123</code></p>
     </div>
   </div>
 
@@ -127,7 +129,7 @@
     <p>© 2026 Overdrive — Panel interno · Volver a la <a href="/">tienda</a></p>
   </footer>
 
-  <div id="notificacion" class="notificacion"></div>
+  <div id="notificacion" class="notificacion" role="status" aria-live="polite"></div>
 
   <script src="js/catalogo-inicial.js"></script>
   <script src="js/datos.js"></script>

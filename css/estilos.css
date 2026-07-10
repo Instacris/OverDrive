@@ -1032,3 +1032,13 @@ td .celda-producto { display: flex; align-items: center; gap: 12px; }
   .boton-whatsapp { padding: 12px; bottom: 16px; right: 16px; }
   .boton-whatsapp span { display: none; }
 }
+
+/* ---------- Accesibilidad: respeta "reducir movimiento" ----------
+   Si la persona configuró su sistema para ver menos animaciones
+   (por mareos o sensibilidad), se desactivan todas. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

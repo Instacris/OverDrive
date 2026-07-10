@@ -13,20 +13,42 @@ const CLAVE_PRODUCTOS = 'gritonegro_productos_v2';
 const CLAVE_MENSAJES  = 'gritonegro_mensajes_v1';
 const CLAVE_SESION    = 'gritonegro_sesion_admin';
 
-/* Contraseña usada SOLO en modo respaldo sin servidor.
-   Con servidor, la contraseña real vive en servidor.js */
+/* Contraseña usada SOLO en modo respaldo sin servidor (doble clic al
+   archivo o pruebas locales). Con servidor, la contraseña real vive
+   en el servidor y nunca se valida aquí. */
 const CLAVE_ADMIN_LOCAL = 'fantasma123';
 
 let modoLocal = false; // Se activa solo si la API no responde
 
+/* El modo respaldo con contraseña local solo se permite en contextos
+   locales (archivo abierto con doble clic, localhost o red casera).
+   En el sitio publicado, la contraseña SIEMPRE la valida el servidor. */
+function esContextoLocal() {
+  const anfitrion = location.hostname;
+  return location.protocol === 'file:' ||
+         anfitrion === 'localhost' ||
+         anfitrion === '127.0.0.1' ||
+         /^192\.168\./.test(anfitrion);
+}
+
 async function llamarAPI(ruta, opciones = {}) {
-  const respuesta = await fetch(ruta, {
-    ...opciones,
-    // Las cabeceras van DESPUÉS de ...opciones para que la mezcla
-    // (Content-Type + clave de admin) no se pierda. Sin Content-Type,
-    // Vercel no interpreta el cuerpo JSON y el guardado falla.
-    headers: { 'Content-Type': 'application/json', ...(opciones.headers || {}) }
-  });
+  let respuesta;
+  try {
+    respuesta = await fetch(ruta, {
+      ...opciones,
+      // Las cabeceras van DESPUÉS de ...opciones para que la mezcla
+      // (Content-Type + clave de admin) no se pierda. Sin Content-Type,
+      // Vercel no interpreta el cuerpo JSON y el guardado falla.
+      headers: { 'Content-Type': 'application/json', ...(opciones.headers || {}) }
+    });
+  } catch {
+    // Solo las caídas de red (sin servidor) activan el modo respaldo;
+    // los errores HTTP (clave errada, datos inválidos, bloqueo por
+    // intentos) deben mostrarse al usuario, no esconderse.
+    const error = new Error('No hay conexión con el servidor');
+    error.esRed = true;
+    throw error;
+  }
   if (!respuesta.ok) {
     const cuerpo = await respuesta.json().catch(() => ({}));
     throw new Error(cuerpo.error || `Error ${respuesta.status}`);
@@ -38,23 +60,26 @@ function cabeceraAdmin() {
   return { 'x-clave-admin': sessionStorage.getItem(CLAVE_SESION) || '' };
 }
 
-/* ---------- Sesión de administrador ---------- */
+/* ---------- Sesión de administrador ----------
+   Devuelve { ok: true } o { ok: false, error } para poder mostrar
+   el motivo exacto (clave errada, bloqueo por intentos, etc.). */
 async function iniciarSesionAdmin(clave) {
   if (!modoLocal) {
     try {
       await llamarAPI('/api/login', { method: 'POST', body: JSON.stringify({ clave }) });
       sessionStorage.setItem(CLAVE_SESION, clave);
-      return true;
+      return { ok: true };
     } catch (error) {
-      if (error.message.includes('incorrecta')) return false;
+      if (!error.esRed) return { ok: false, error: error.message };
       modoLocal = true; // El servidor no está disponible: pasamos a modo local
     }
   }
-  if (clave === CLAVE_ADMIN_LOCAL) {
+  // Sin servidor, solo se acepta la clave local Y solo en contextos locales
+  if (esContextoLocal() && clave === CLAVE_ADMIN_LOCAL) {
     sessionStorage.setItem(CLAVE_SESION, clave);
-    return true;
+    return { ok: true };
   }
-  return false;
+  return { ok: false, error: 'Contraseña incorrecta.' };
 }
 
 function haySesion() {
@@ -87,7 +112,7 @@ async function guardarProductos(lista) {
       });
       return;
     } catch (error) {
-      if (error.message.includes('autorizado')) throw error;
+      if (!error.esRed) throw error; // Clave errada o datos rechazados: avisar, no esconder
       modoLocal = true;
     }
   }
@@ -105,7 +130,7 @@ async function enviarMensaje(datos) {
       await llamarAPI('/api/mensajes', { method: 'POST', body: JSON.stringify(datos) });
       return;
     } catch (error) {
-      if (error.message.includes('obligatorios')) throw error;
+      if (!error.esRed) throw error; // Datos rechazados o anti-spam: avisar al usuario
       modoLocal = true;
     }
   }
@@ -119,7 +144,7 @@ async function obtenerMensajes() {
     try {
       return await llamarAPI('/api/mensajes', { headers: cabeceraAdmin() });
     } catch (error) {
-      if (error.message.includes('autorizado')) throw error;
+      if (!error.esRed) throw error;
       modoLocal = true;
     }
   }
@@ -132,7 +157,7 @@ async function borrarMensaje(id) {
       await llamarAPI(`/api/mensajes?id=${id}`, { method: 'DELETE', headers: cabeceraAdmin() });
       return;
     } catch (error) {
-      if (error.message.includes('autorizado')) throw error;
+      if (!error.esRed) throw error;
       modoLocal = true;
     }
   }
@@ -167,10 +192,16 @@ function formatoCLP(valor) {
   return '$' + Number(valor).toLocaleString('es-CL');
 }
 
+/* Escapa TODO carácter peligroso, incluidas las comillas: así un texto
+   malicioso no puede "escaparse" de un atributo HTML (value="...",
+   alt="...") e inyectar código en la página. */
 function escaparHTML(texto) {
-  const div = document.createElement('div');
-  div.textContent = String(texto ?? '');
-  return div.innerHTML;
+  return String(texto ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 /* Devuelve la imagen del producto (foto si tiene, dibujo SVG si no) */

@@ -3,33 +3,47 @@
    POST   → guarda un mensaje del formulario (público)
    GET    → lista los mensajes (solo admin)
    DELETE → borra un mensaje por id (solo admin)
+
+   Seguridad: cada mensaje pasa por el validador, se aceptan
+   máximo 5 mensajes por IP cada 10 minutos (anti-spam) y la
+   bandeja guarda máximo 200 mensajes (los más antiguos salen).
    ========================================================= */
-const { leerBD, guardarBD, CLAVE_ADMIN, cuerpoJSON } = require('../lib/db.js');
+const { leerBD, guardarBD, cuerpoJSON, claveValida, ipDe, demasiadosEventos, registrarEvento } = require('../lib/db.js');
+const { sanearMensaje } = require('../lib/validar.js');
+
+const MAX_MENSAJES_GUARDADOS = 200;
 
 module.exports = async (req, res) => {
+  const ip = ipDe(req);
+
   if (req.method === 'POST') {
-    const m = cuerpoJSON(req) || {};
-    if (!m.nombre || !m.correo || !m.telefono || !m.mensaje) {
-      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    if (await demasiadosEventos('mensajes', ip, 5)) {
+      return res.status(429).json({ error: 'Has enviado demasiados mensajes seguidos. Espera unos minutos.' });
     }
+
+    const resultado = sanearMensaje(cuerpoJSON(req));
+    if (resultado.error) {
+      return res.status(400).json({ error: resultado.error });
+    }
+
     const bd = await leerBD();
     bd.mensajes.unshift({
       id: Date.now(),
-      nombre: String(m.nombre).slice(0, 120),
-      correo: String(m.correo).slice(0, 120),
-      telefono: String(m.telefono).slice(0, 40),
-      productos: Array.isArray(m.productos)
-        ? m.productos.map(p => String(p).slice(0, 120))
-        : ['Consulta general'],
-      mensaje: String(m.mensaje).slice(0, 2000),
+      ...resultado.mensaje,
       fecha: new Date().toLocaleString('es-CL')
     });
+    bd.mensajes = bd.mensajes.slice(0, MAX_MENSAJES_GUARDADOS);
     await guardarBD(bd);
+    await registrarEvento('mensajes', ip, 600);
     return res.status(201).json({ ok: true });
   }
 
   if (req.method === 'GET') {
-    if (req.headers['x-clave-admin'] !== CLAVE_ADMIN) {
+    if (await demasiadosEventos('login', ip, 8)) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera 10 minutos.' });
+    }
+    if (!claveValida(req.headers['x-clave-admin'])) {
+      await registrarEvento('login', ip, 600);
       return res.status(401).json({ error: 'No autorizado' });
     }
     const bd = await leerBD();
@@ -37,7 +51,11 @@ module.exports = async (req, res) => {
   }
 
   if (req.method === 'DELETE') {
-    if (req.headers['x-clave-admin'] !== CLAVE_ADMIN) {
+    if (await demasiadosEventos('login', ip, 8)) {
+      return res.status(429).json({ error: 'Demasiados intentos. Espera 10 minutos.' });
+    }
+    if (!claveValida(req.headers['x-clave-admin'])) {
+      await registrarEvento('login', ip, 600);
       return res.status(401).json({ error: 'No autorizado' });
     }
     const id = Number(req.query.id);

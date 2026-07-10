@@ -40,11 +40,13 @@ function iniciarLogin() {
   formulario.addEventListener('submit', async evento => {
     evento.preventDefault();
     const clave = document.getElementById('clave').value;
-    if (await iniciarSesionAdmin(clave)) {
+    const resultado = await iniciarSesionAdmin(clave);
+    if (resultado.ok) {
       await mostrarSegunSesion();
     } else {
+      // Muestra el motivo real: clave errada o bloqueo por demasiados intentos
       aviso.className = 'aviso-formulario error';
-      aviso.textContent = '⚠ Contraseña incorrecta. Inténtalo de nuevo.';
+      aviso.textContent = `⚠ ${resultado.error || 'Contraseña incorrecta.'}`;
       formulario.reset();
     }
   });
