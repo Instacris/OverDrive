@@ -10,3 +10,5 @@ datos.json
 
 # Configuración local de Claude Code (no es parte del sitio)
 .claude
+
+.vercel

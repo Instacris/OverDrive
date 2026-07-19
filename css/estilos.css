@@ -317,7 +317,7 @@ body::before {
   font-family: inherit;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
 }
 
 .filtros button:hover { color: var(--texto); border-color: var(--texto-suave); }
@@ -713,8 +713,7 @@ td .acciones-fila { display: flex; gap: 8px; }
 
 .mensaje {
   background: var(--panel);
-  border: 1px solid var(--borde);
-  border-left: 3px solid var(--rojo);
+  border: 1px solid color-mix(in srgb, var(--rojo) 35%, var(--borde));
   border-radius: 10px;
   padding: 18px 20px;
 }
@@ -908,7 +907,7 @@ a, button, .boton, select, .filtros button,
   color: transparent;
   font-size: 0.9rem;
   font-weight: 800;
-  transition: all 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
 }
 
 .opcion-producto.seleccionada {
