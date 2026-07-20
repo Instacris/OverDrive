@@ -19,6 +19,76 @@ function notificar(texto) {
   temporizadorNotificacion = setTimeout(() => caja.classList.remove('visible'), 2600);
 }
 
+/* ---------- Subida de imágenes propias ----------
+   Reescala la foto elegida a un tamaño razonable y la devuelve como
+   data URI (base64), para guardarla dentro del producto sin subir
+   archivos al servidor. Así el administrador puede usar sus propias
+   fotos, no solo las de la lista fija. */
+function reescalarImagen(archivo, maxLado = 900, calidad = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!archivo || !/^image\//.test(archivo.type)) { reject(new Error('El archivo no es una imagen.')); return; }
+    const lector = new FileReader();
+    lector.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    lector.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('La imagen está dañada.'));
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxLado || h > maxLado) {
+          const escala = Math.min(maxLado / w, maxLado / h);
+          w = Math.round(w * escala); h = Math.round(h * escala);
+        }
+        const lienzo = document.createElement('canvas');
+        lienzo.width = w; lienzo.height = h;
+        const ctx = lienzo.getContext('2d');
+        ctx.fillStyle = '#0a0a0d'; // fondo, por si la foto trae transparencia
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        let uri = lienzo.toDataURL('image/jpeg', calidad);
+        if (uri.length > 480000) uri = lienzo.toDataURL('image/jpeg', 0.68); // recorta peso
+        resolve(uri);
+      };
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(archivo);
+  });
+}
+
+/* Imagen subida para el producto NUEVO (tiene prioridad sobre la lista) */
+let imagenSubidaNueva = '';
+
+function iniciarSubidaImagen() {
+  const btn = document.getElementById('btn-subir-imagen');
+  const input = document.getElementById('nueva-imagen-archivo');
+  const vista = document.querySelector('.subir-imagen__vista');
+  const preview = document.getElementById('nueva-imagen-preview');
+  const quitar = document.getElementById('btn-quitar-imagen');
+  const select = document.getElementById('nueva-imagen');
+  if (!btn || !input) return;
+
+  btn.addEventListener('click', () => input.click());
+  input.addEventListener('change', async () => {
+    const archivo = input.files && input.files[0];
+    input.value = ''; // permite volver a elegir el mismo archivo
+    if (!archivo) return;
+    try {
+      imagenSubidaNueva = await reescalarImagen(archivo);
+      preview.src = imagenSubidaNueva;
+      if (vista) vista.hidden = false;
+      if (select) select.disabled = true; // la foto subida manda
+      notificar('✔ Foto lista. Se usará al agregar el producto.');
+    } catch (error) {
+      notificar(`⚠ ${error.message}`);
+    }
+  });
+  if (quitar) quitar.addEventListener('click', () => {
+    imagenSubidaNueva = '';
+    if (preview) preview.src = '';
+    if (vista) vista.hidden = true;
+    if (select) select.disabled = false;
+  });
+}
+
 /* ---------- Sesión ---------- */
 async function mostrarSegunSesion() {
   const login = document.getElementById('pantalla-login');
@@ -119,6 +189,7 @@ function pintarTabla() {
       <td><input type="number" class="campo-stock" min="0" value="${p.stock}"></td>
       <td>
         <div class="acciones-fila">
+          <button class="boton boton-chico" data-imagen="${p.id}">🖼 Imagen</button>
           <button class="boton boton-rojo boton-chico" data-guardar="${p.id}">Guardar</button>
           <button class="boton boton-peligro boton-chico" data-eliminar="${p.id}">Eliminar</button>
         </div>
@@ -172,6 +243,42 @@ function pintarTabla() {
       notificar('🗑 Producto eliminado.');
     });
   });
+
+  // Cambiar la imagen de una fila (sube una foto propia y actualiza la miniatura)
+  cuerpo.querySelectorAll('[data-imagen]').forEach(boton => {
+    boton.addEventListener('click', () => {
+      const id = Number(boton.dataset.imagen);
+      const producto = productosAdmin.find(p => p.id === id);
+      if (!producto) return;
+
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png,image/jpeg,image/webp';
+      input.addEventListener('change', async () => {
+        const archivo = input.files && input.files[0];
+        if (!archivo) return;
+        try {
+          producto.imagen = await reescalarImagen(archivo);
+        } catch (error) {
+          notificar(`⚠ ${error.message}`);
+          return;
+        }
+        // Refresca la miniatura de esa fila sin repintar toda la tabla
+        const fila = boton.closest('tr');
+        const celda = fila.querySelector('.celda-producto');
+        let mini = celda.querySelector('.miniatura-admin');
+        if (!mini) {
+          mini = document.createElement('img');
+          mini.className = 'miniatura-admin';
+          mini.alt = '';
+          celda.prepend(mini);
+        }
+        mini.src = producto.imagen;
+        notificar('✔ Imagen cargada. Pulsa «Guardar» en esa fila para aplicarla.');
+      });
+      input.click();
+    });
+  });
 }
 
 /* ---------- Agregar producto ---------- */
@@ -221,16 +328,24 @@ function iniciarAgregar() {
       return;
     }
 
-    // La imagen puede ser una foto de la carpeta "imagenes" o un dibujo SVG
-    const valorImagen = document.getElementById('nueva-imagen').value;
-    const esDibujo = valorImagen.startsWith('svg:');
+    // Prioridad: foto propia subida por el administrador > opción de la lista.
+    // La imagen de la lista puede ser una foto (imagenes/…) o un dibujo SVG.
+    let icono = 'mascara';
+    let imagen = '';
+    if (imagenSubidaNueva) {
+      imagen = imagenSubidaNueva;
+    } else {
+      const valorImagen = document.getElementById('nueva-imagen').value;
+      if (valorImagen.startsWith('svg:')) icono = valorImagen.slice(4);
+      else imagen = valorImagen;
+    }
 
     const nuevaLista = [...productosAdmin, {
       id: Date.now(),
       nombre,
       categoria: document.getElementById('nueva-categoria').value,
-      icono: esDibujo ? valorImagen.slice(4) : 'mascara',
-      imagen: esDibujo ? '' : valorImagen,
+      icono,
+      imagen,
       materiales,
       precio,
       oferta,
@@ -244,6 +359,12 @@ function iniciarAgregar() {
       return;
     }
     formulario.reset();
+    // Limpia la foto subida y su vista previa para el próximo producto
+    imagenSubidaNueva = '';
+    const vistaSubida = document.querySelector('.subir-imagen__vista');
+    if (vistaSubida) vistaSubida.hidden = true;
+    const selImg = document.getElementById('nueva-imagen');
+    if (selImg) selImg.disabled = false;
     await cargarPanel();
     notificar(`✔ «${nombre}» agregado al catálogo.`);
   });
@@ -321,6 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   iniciarLogin();
   llenarSelectorImagenes();
   iniciarAgregar();
+  iniciarSubidaImagen();
   await mostrarSegunSesion();
 
   // Refresca el panel cada 10 segundos (solo en el sitio real con servidor)

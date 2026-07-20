@@ -95,6 +95,14 @@
           <div class="campo">
             <label for="nueva-imagen">Imagen</label>
             <select id="nueva-imagen"><!-- Se completa con JavaScript --></select>
+            <div class="subir-imagen">
+              <input type="file" id="nueva-imagen-archivo" accept="image/png,image/jpeg,image/webp" hidden>
+              <button type="button" class="boton boton-chico" id="btn-subir-imagen">⬆ Subir foto propia…</button>
+              <div class="subir-imagen__vista" hidden>
+                <img id="nueva-imagen-preview" alt="Vista previa de la imagen subida">
+                <button type="button" class="boton boton-peligro boton-chico" id="btn-quitar-imagen">Quitar</button>
+              </div>
+            </div>
           </div>
           <div class="campo">
             <label for="nuevo-precio">Precio CLP <span class="obligatorio">*</span></label>

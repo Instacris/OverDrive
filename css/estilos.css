@@ -972,6 +972,15 @@ a, button, .boton, select, .filtros button,
 
 td .celda-producto { display: flex; align-items: center; gap: 12px; }
 
+/* Subida de foto propia en el formulario "Agregar producto" */
+.subir-imagen { margin-top: 8px; }
+.subir-imagen__vista { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+#nueva-imagen-preview {
+  width: 56px; height: 56px;
+  object-fit: cover; border-radius: 8px;
+  border: 1px solid var(--borde);
+}
+
 /* Logo en la pantalla de inicio de sesión */
 .caja-login .logo-login {
   height: 100px;
